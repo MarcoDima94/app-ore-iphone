@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Registro Ore</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+    <div id="app-container">
+        <header>
+            <h1>Registro Ore</h1>
+            <div class="theme-switcher">
+                <span>☀️</span>
+                <label class="switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider round"></span>
+                </label>
+                <span>🌙</span>
+            </div>
+        </header>
+
+        <div class="card">
+            <div class="date-selector">
+                <button id="prev-day-btn" class="date-nav-btn">-1 G</button>
+                <input type="date" id="entry-date">
+                <button id="next-day-btn" class="date-nav-btn">+1 G</button>
+            </div>
+            <input type="number" id="entry-hours" placeholder="Ore lavorate (es. 8.5)">
+            <input type="text" id="location-morning" placeholder="Luogo (mattina)">
+            <input type="text" id="location-afternoon" placeholder="Luogo (pomeriggio)">
+            <button id="add-entry-btn">Aggiungi Voce</button>
+        </div>
+
+        <div id="export-wrapper">
+            <div class="card" id="summary">
+                <h2>Riepilogo Mensile</h2>
+                <p>Mese: <strong id="current-month"></strong></p>
+                <p class="total-hours-display">Totale Ore: <strong id="total-hours">0</strong></p>
+            </div>
+
+            <div class="card" id="table-container">
+                <table id="log-table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Ore</th>
+                            <th>Mattina</th>
+                            <th>Pomeriggio</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="log-body">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card actions-card">
+             <button id="export-btn" class="action-btn">Crea Immagine Report</button>
+             <button id="reset-btn" class="action-btn destructive">Resetta Dati</button>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

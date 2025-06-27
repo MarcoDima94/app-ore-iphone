@@ -1,0 +1,187 @@
+/* Variabili per i temi */
+:root {
+    --bg-color: #f0f2f5;
+    --card-bg-color: #ffffff;
+    --text-color: #000000;
+    --secondary-text-color: #6d6d72;
+    --border-color: #c6c6c8;
+    --primary-accent-color: #007aff;
+    --destructive-color: #ff3b30;
+    --switch-bg: #e9e9eb;
+    --switch-knob: #ffffff;
+}
+
+body.dark-theme {
+    --bg-color: #000000;
+    --card-bg-color: #1c1c1e;
+    --text-color: #ffffff;
+    --secondary-text-color: #8e8e93;
+    --border-color: #38383a;
+    --primary-accent-color: #0a84ff;
+    --destructive-color: #ff453a;
+    --switch-bg: #39393d;
+    --switch-knob: #e9e9eb;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 15px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+#app-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px 20px 10px;
+}
+
+h1 {
+    font-size: 34px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.card {
+    background-color: var(--card-bg-color);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    padding: 18px;
+    transition: background-color 0.3s;
+}
+
+/* NUOVI STILI PER IL SELETTORE DATA */
+.date-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.date-selector input {
+    flex-grow: 1;
+    margin-bottom: 0;
+}
+.date-nav-btn {
+    width: auto;
+    flex-shrink: 0;
+    padding: 12px;
+    font-size: 16px;
+    line-height: 1;
+    background-color: var(--secondary-text-color) !important;
+}
+
+input[type="date"],
+input[type="number"],
+input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-sizing: border-box;
+    margin-bottom: 12px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-size: 16px;
+}
+
+input:last-of-type {
+    margin-bottom: 0;
+}
+
+button {
+    width: 100%;
+    padding: 14px 15px;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: 600;
+    font-size: 17px;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+button:active {
+    transform: scale(0.98);
+}
+
+#add-entry-btn {
+    background-color: var(--primary-accent-color);
+    margin-top: 10px;
+}
+
+#summary {
+    text-align: center;
+}
+#summary h2 {
+    margin-top: 0;
+    font-size: 22px;
+}
+.total-hours-display {
+    font-size: 28px;
+    font-weight: 500;
+}
+.total-hours-display strong {
+    color: var(--primary-accent-color);
+}
+
+#table-container {
+    padding: 0;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 14px 18px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+tr:last-child td {
+    border-bottom: none;
+}
+th {
+    color: var(--secondary-text-color);
+    font-weight: 500;
+}
+
+.delete-btn {
+    background-color: var(--destructive-color);
+    color: white;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    font-size: 14px;
+    line-height: 30px;
+    text-align: center;
+}
+
+.actions-card {
+    display: grid;
+    gap: 12px;
+}
+.action-btn.destructive {
+    background-color: var(--destructive-color);
+}
+#export-btn {
+    background-color: var(--primary-accent-color);
+}
+
+/* Theme Switcher */
+.theme-switcher { display: flex; align-items: center; gap: 8px; }
+.switch { position: relative; display: inline-block; width: 51px; height: 31px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--switch-bg); transition: .4s; border-radius: 34px; }
+.slider:before { position: absolute; content: ""; height: 27px; width: 27px; left: 2px; bottom: 2px; background-color: var(--switch-knob); transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--primary-accent-color); }
+input:checked + .slider:before { transform: translateX(20px); }
