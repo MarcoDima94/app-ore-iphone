@@ -3,7 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const dateInput = document.getElementById('entry-date');
     const prevDayBtn = document.getElementById('prev-day-btn');
     const nextDayBtn = document.getElementById('next-day-btn');
-    const hoursInput = document.getElementById('entry-hours');
+    const hourSlider = document.getElementById('hour-slider');
+    const sliderValue = document.getElementById('slider-value');
     const morningInput = document.getElementById('location-morning');
     const afternoonInput = document.getElementById('location-afternoon');
     const addBtn = document.getElementById('add-entry-btn');
@@ -30,13 +31,11 @@ document.addEventListener('DOMContentLoaded', () => {
             themeToggle.checked = false;
         }
     };
-
     themeToggle.addEventListener('change', () => {
         const newTheme = themeToggle.checked ? 'dark' : 'light';
         localStorage.setItem('theme', newTheme);
         applyTheme(newTheme);
     });
-    
     const savedTheme = localStorage.getItem('theme') || 'light';
     applyTheme(savedTheme);
 
@@ -46,10 +45,13 @@ document.addEventListener('DOMContentLoaded', () => {
         currentDate.setDate(currentDate.getDate() + days);
         dateInput.value = currentDate.toISOString().split('T')[0];
     };
-
     prevDayBtn.addEventListener('click', () => changeDate(-1));
     nextDayBtn.addEventListener('click', () => changeDate(1));
 
+    // --- LOGICA PER LO SLIDER DELLE ORE ---
+    hourSlider.addEventListener('input', () => {
+        sliderValue.textContent = `${parseFloat(hourSlider.value).toFixed(1)} h`;
+    });
 
     // --- LOGICA APP ---
     const renderLog = () => {
@@ -57,16 +59,12 @@ document.addEventListener('DOMContentLoaded', () => {
         let totalHours = 0;
         const currentMonth = new Date().getMonth();
         const currentYear = new Date().getFullYear();
-
         currentMonthEl.textContent = new Date(currentYear, currentMonth).toLocaleString('it-IT', { month: 'long', year: 'numeric' });
-
         const filteredEntries = logEntries.filter(entry => {
             const entryDate = new Date(entry.date);
             return entryDate.getMonth() === currentMonth && entryDate.getFullYear() === currentYear;
         });
-        
         filteredEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
-
         filteredEntries.forEach(entry => {
             const row = document.createElement('tr');
             const originalIndex = logEntries.findIndex(e => e.id === entry.id);
@@ -80,27 +78,23 @@ document.addEventListener('DOMContentLoaded', () => {
             logBody.appendChild(row);
             totalHours += parseFloat(entry.hours) || 0;
         });
-
         totalHoursEl.textContent = totalHours.toFixed(2);
     };
 
-    // --- FUNZIONE DI AGGIUNTA CON CONTROLLO DATA DUPLICATA ---
+    // --- FUNZIONE DI AGGIUNTA ---
     addBtn.addEventListener('click', () => {
         const date = dateInput.value;
-
         if (!date) {
             alert('Per favore, inserisci una data.');
             return;
         }
-
-        // NUOVO CONTROLLO: Verifica se la data esiste già
         const isDateDuplicate = logEntries.some(entry => entry.date === date);
         if (isDateDuplicate) {
-            alert('Errore: Questa data è già presente nel registro. Non puoi aggiungerla di nuovo.');
-            return; // Interrompe l'esecuzione della funzione
+            alert('Errore: Questa data è già presente nel registro.');
+            return;
         }
-
-        const hours = hoursInput.value.trim() === '' ? '0' : hoursInput.value;
+        
+        const hours = parseFloat(hourSlider.value).toFixed(1);
         
         logEntries.push({
             id: Date.now(),
@@ -109,12 +103,13 @@ document.addEventListener('DOMContentLoaded', () => {
             locationM: morningInput.value,
             locationA: afternoonInput.value
         });
-
         localStorage.setItem('workLog', JSON.stringify(logEntries));
-
-        hoursInput.value = '';
+        
         morningInput.value = '';
         afternoonInput.value = '';
+        // Modifica per resettare lo slider a 0
+        hourSlider.value = 0; 
+        sliderValue.textContent = '0.0 h';
         
         renderLog();
     });
@@ -136,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderLog();
         }
     });
-
+    
     // --- FUNZIONE DI ESPORTAZIONE A DUE COLONNE ---
     exportBtn.addEventListener('click', () => {
         const currentMonth = new Date().getMonth();
@@ -209,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const secondColumnData = filteredEntries.slice(15);
         
         const tablesHTML = `
-            <div style="display: flex; gap: 20px;">
+            <div style="display: flex; gap: 20px; align-items: flex-start;">
                 <div style="flex: 1;">${createTableHTML(firstColumnData)}</div>
                 <div style="flex: 1;">${createTableHTML(secondColumnData)}</div>
             </div>
@@ -222,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
         html2canvas(printContainer, { scale: 2 }).then(canvas => {
             const image = canvas.toDataURL('image/png');
             const link = document.createElement('a');
-            const monthName = currentMonthEl.textContent.replace(' ', '-');
+            const monthName = currentMonthEl.textContent.replace(/\s/g, '-');
             link.download = `Report-Ore-${monthName}.png`;
             link.href = image;
             link.click();

@@ -58,7 +58,6 @@ h1 {
     transition: background-color 0.3s;
 }
 
-/* NUOVI STILI PER IL SELETTORE DATA */
 .date-selector {
     display: flex;
     align-items: center;
@@ -113,7 +112,7 @@ button:active {
 
 #add-entry-btn {
     background-color: var(--primary-accent-color);
-    margin-top: 10px;
+    margin-top: 20px;
 }
 
 #summary {
@@ -177,7 +176,63 @@ th {
     background-color: var(--primary-accent-color);
 }
 
-/* Theme Switcher */
+/* Stili Slider Ore */
+.slider-container {
+    padding: 10px 0;
+    margin-bottom: 12px;
+}
+.slider-container-inner {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.slider-container label {
+    font-weight: 500;
+    color: var(--text-color);
+}
+input[type="range"] {
+    flex-grow: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    background: var(--switch-bg);
+    border-radius: 5px;
+    outline: none;
+    opacity: 0.9;
+    transition: opacity .2s;
+}
+input[type="range"]:hover {
+    opacity: 1;
+}
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 25px;
+    height: 25px;
+    background: var(--card-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+input[type="range"]::-moz-range-thumb {
+    width: 25px;
+    height: 25px;
+    background: var(--card-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    cursor: pointer;
+}
+#slider-value {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--primary-accent-color);
+    min-width: 50px;
+    text-align: right;
+}
+
+/* Stili Theme Switcher */
 .theme-switcher { display: flex; align-items: center; gap: 8px; }
 .switch { position: relative; display: inline-block; width: 51px; height: 31px; }
 .switch input { opacity: 0; width: 0; height: 0; }
