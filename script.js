@@ -37,7 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
         applyTheme(newTheme);
     });
     
-    // Applica tema salvato al caricamento
     const savedTheme = localStorage.getItem('theme') || 'light';
     applyTheme(savedTheme);
 
@@ -66,7 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return entryDate.getMonth() === currentMonth && entryDate.getFullYear() === currentYear;
         });
         
-        // Ordinamento crescente (dal più vecchio al più nuovo)
         filteredEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
 
         filteredEntries.forEach(entry => {
@@ -86,22 +84,38 @@ document.addEventListener('DOMContentLoaded', () => {
         totalHoursEl.textContent = totalHours.toFixed(2);
     };
 
+    // --- FUNZIONE DI AGGIUNTA CON CONTROLLO DATA DUPLICATA ---
     addBtn.addEventListener('click', () => {
-        if (!dateInput.value || !hoursInput.value) {
-            alert('Per favore, inserisci data e ore.');
+        const date = dateInput.value;
+
+        if (!date) {
+            alert('Per favore, inserisci una data.');
             return;
         }
+
+        // NUOVO CONTROLLO: Verifica se la data esiste già
+        const isDateDuplicate = logEntries.some(entry => entry.date === date);
+        if (isDateDuplicate) {
+            alert('Errore: Questa data è già presente nel registro. Non puoi aggiungerla di nuovo.');
+            return; // Interrompe l'esecuzione della funzione
+        }
+
+        const hours = hoursInput.value.trim() === '' ? '0' : hoursInput.value;
+        
         logEntries.push({
             id: Date.now(),
-            date: dateInput.value,
-            hours: hoursInput.value,
+            date: date,
+            hours: hours,
             locationM: morningInput.value,
             locationA: afternoonInput.value
         });
+
         localStorage.setItem('workLog', JSON.stringify(logEntries));
+
         hoursInput.value = '';
         morningInput.value = '';
         afternoonInput.value = '';
+        
         renderLog();
     });
 
@@ -123,9 +137,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- NUOVA FUNZIONE DI ESPORTAZIONE A DUE COLONNE ---
+    // --- FUNZIONE DI ESPORTAZIONE A DUE COLONNE ---
     exportBtn.addEventListener('click', () => {
-        // 1. Recupera i dati del mese corrente e ordinali
         const currentMonth = new Date().getMonth();
         const currentYear = new Date().getFullYear();
         const filteredEntries = logEntries
@@ -140,7 +153,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
     
-        // 2. Crea il contenitore "da stampa" e nascondilo fuori schermo
         const printContainer = document.createElement('div');
         printContainer.id = 'print-container';
         printContainer.style.position = 'absolute';
@@ -193,7 +205,6 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         };
     
-        // 3. Dividi i dati e crea il contenuto a due colonne
         const firstColumnData = filteredEntries.slice(0, 15);
         const secondColumnData = filteredEntries.slice(15);
         
@@ -206,7 +217,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         printContainer.innerHTML = summaryHTML + tablesHTML;
     
-        // 4. Aggiungi il contenitore al body, fotografalo e poi rimuovilo
         document.body.appendChild(printContainer);
     
         html2canvas(printContainer, { scale: 2 }).then(canvas => {
@@ -217,11 +227,9 @@ document.addEventListener('DOMContentLoaded', () => {
             link.href = image;
             link.click();
     
-            // 5. Pulisci rimuovendo l'elemento temporaneo
             document.body.removeChild(printContainer);
         }).catch(err => {
             console.error("Errore durante la creazione dell'immagine:", err);
-            // Assicurati di rimuovere il container anche in caso di errore
             document.body.removeChild(printContainer);
         });
     });
