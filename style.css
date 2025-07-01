@@ -5,7 +5,7 @@
     --text-color: #000000;
     --secondary-text-color: #6d6d72;
     --border-color: #c6c6c8;
-    --primary-accent-color: #007aff;
+    --primary-accent-color: #00c410;
     --destructive-color: #ff3b30;
     --switch-bg: #e9e9eb;
     --switch-knob: #ffffff;
@@ -17,7 +17,7 @@ body.dark-theme {
     --text-color: #ffffff;
     --secondary-text-color: #8e8e93;
     --border-color: #38383a;
-    --primary-accent-color: #0a84ff;
+    --primary-accent-color: #00c410;
     --destructive-color: #ff453a;
     --switch-bg: #39393d;
     --switch-knob: #e9e9eb;
