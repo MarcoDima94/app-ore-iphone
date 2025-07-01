@@ -308,14 +308,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     shareBtn.addEventListener('click', () => {
-        const name = prompt("Inserisci il tuo nome per personalizzare il report:");
+        const name = prompt("Inserisci il tuo nome:");
         if (name) {
             createReportImage(true, name);
         }
     });
     
     exportBtn.addEventListener('click', () => {
-        const name = prompt("Inserisci il tuo nome per personalizzare il report:");
+        const name = prompt("Inserisci il tuo nome:");
         if (name) {
             createReportImage(false, name);
         }
