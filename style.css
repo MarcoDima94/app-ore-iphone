@@ -5,10 +5,13 @@
     --text-color: #000000;
     --secondary-text-color: #6d6d72;
     --border-color: #c6c6c8;
-    --primary-accent-color: #00c410;
+    /* COLORE MODIFICATO */
+    --primary-accent-color: #07A54E; 
     --destructive-color: #ff3b30;
     --switch-bg: #e9e9eb;
     --switch-knob: #ffffff;
+    --card-border-color: #000000;
+    --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 body.dark-theme {
@@ -17,14 +20,17 @@ body.dark-theme {
     --text-color: #ffffff;
     --secondary-text-color: #8e8e93;
     --border-color: #38383a;
-    --primary-accent-color: #00c410;
+    /* COLORE MODIFICATO */
+    --primary-accent-color: #07A54E;
     --destructive-color: #ff453a;
     --switch-bg: #39393d;
     --switch-knob: #e9e9eb;
+    --card-border-color: #ffffff;
+    --card-shadow: none;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    font-family: "Comic Sans MS", "Comic Sans", cursive, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
     margin: 0;
@@ -35,6 +41,18 @@ body {
 #app-container {
     max-width: 600px;
     margin: 0 auto;
+    animation: fadeInUp 0.5s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 header {
@@ -50,12 +68,27 @@ h1 {
     margin: 0;
 }
 
+h2 {
+    font-size: 22px;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
 .card {
     background-color: var(--card-bg-color);
     border-radius: 12px;
     margin-bottom: 20px;
     padding: 18px;
-    transition: background-color 0.3s;
+    border: 1px solid var(--card-border-color);
+    box-shadow: var(--card-shadow);
+    transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+.card hr {
+    border: none;
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 25px 0;
 }
 
 .date-selector {
@@ -64,10 +97,12 @@ h1 {
     gap: 8px;
     margin-bottom: 12px;
 }
+
 .date-selector input {
     flex-grow: 1;
     margin-bottom: 0;
 }
+
 .date-nav-btn {
     width: auto;
     flex-shrink: 0;
@@ -79,7 +114,8 @@ h1 {
 
 input[type="date"],
 input[type="number"],
-input[type="text"] {
+input[type="text"],
+select {
     width: 100%;
     padding: 12px;
     border: 1px solid var(--border-color);
@@ -89,6 +125,15 @@ input[type="text"] {
     background-color: var(--bg-color);
     color: var(--text-color);
     font-size: 16px;
+}
+
+select {
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
 }
 
 input:last-of-type {
@@ -104,8 +149,13 @@ button {
     font-weight: 600;
     font-size: 17px;
     cursor: pointer;
-    transition: transform 0.1s;
+    transition: transform 0.2s ease, background-color 0.2s ease, filter 0.2s ease;
 }
+
+button:hover {
+    filter: brightness(1.1);
+}
+
 button:active {
     transform: scale(0.98);
 }
@@ -118,14 +168,12 @@ button:active {
 #summary {
     text-align: center;
 }
-#summary h2 {
-    margin-top: 0;
-    font-size: 22px;
-}
+
 .total-hours-display {
     font-size: 28px;
     font-weight: 500;
 }
+
 .total-hours-display strong {
     color: var(--primary-accent-color);
 }
@@ -145,12 +193,29 @@ th, td {
     text-align: left;
     border-bottom: 1px solid var(--border-color);
 }
+
 tr:last-child td {
     border-bottom: none;
 }
+
 th {
     color: var(--secondary-text-color);
     font-weight: 500;
+}
+
+#log-table tbody tr {
+    animation: fadeInRow 0.4s ease-out forwards;
+}
+
+@keyframes fadeInRow {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .delete-btn {
@@ -169,27 +234,35 @@ th {
     display: grid;
     gap: 12px;
 }
+
 .action-btn.destructive {
     background-color: var(--destructive-color);
 }
+
+/* COLORE MODIFICATO */
+.action-btn.share {
+    background-color: #07A54E;
+}
+
 #export-btn {
     background-color: var(--primary-accent-color);
 }
 
-/* Stili Slider Ore */
 .slider-container {
     padding: 10px 0;
-    margin-bottom: 12px;
 }
+
 .slider-container-inner {
     display: flex;
     align-items: center;
     gap: 15px;
 }
+
 .slider-container label {
     font-weight: 500;
     color: var(--text-color);
 }
+
 input[type="range"] {
     flex-grow: 1;
     -webkit-appearance: none;
@@ -202,9 +275,11 @@ input[type="range"] {
     opacity: 0.9;
     transition: opacity .2s;
 }
+
 input[type="range"]:hover {
     opacity: 1;
 }
+
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
@@ -216,6 +291,7 @@ input[type="range"]::-webkit-slider-thumb {
     cursor: pointer;
     box-shadow: 0 0 5px rgba(0,0,0,0.1);
 }
+
 input[type="range"]::-moz-range-thumb {
     width: 25px;
     height: 25px;
@@ -224,6 +300,7 @@ input[type="range"]::-moz-range-thumb {
     border-radius: 50%;
     cursor: pointer;
 }
+
 #slider-value {
     font-size: 17px;
     font-weight: 600;
@@ -232,7 +309,6 @@ input[type="range"]::-moz-range-thumb {
     text-align: right;
 }
 
-/* Stili Theme Switcher */
 .theme-switcher { display: flex; align-items: center; gap: 8px; }
 .switch { position: relative; display: inline-block; width: 51px; height: 31px; }
 .switch input { opacity: 0; width: 0; height: 0; }
@@ -240,3 +316,27 @@ input[type="range"]::-moz-range-thumb {
 .slider:before { position: absolute; content: ""; height: 27px; width: 27px; left: 2px; bottom: 2px; background-color: var(--switch-knob); transition: .4s; border-radius: 50%; }
 input:checked + .slider { background-color: var(--primary-accent-color); }
 input:checked + .slider:before { transform: translateX(20px); }
+
+.add-location-form {
+    display: flex;
+    gap: 10px;
+}
+
+.add-location-form input {
+    flex-grow: 1;
+    margin: 0;
+}
+
+.add-location-form button {
+    width: auto;
+    flex-shrink: 0;
+    padding-left: 20px;
+    padding-right: 20px;
+    background-color: #34c759;
+}
+
+.add-location-form button:disabled {
+    background-color: var(--secondary-text-color);
+    cursor: not-allowed;
+    filter: brightness(1);
+}

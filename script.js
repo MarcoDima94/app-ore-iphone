@@ -5,8 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextDayBtn = document.getElementById('next-day-btn');
     const hourSlider = document.getElementById('hour-slider');
     const sliderValue = document.getElementById('slider-value');
-    const morningInput = document.getElementById('location-morning');
-    const afternoonInput = document.getElementById('location-afternoon');
+    const morningSelect = document.getElementById('location-morning');
+    const afternoonSelect = document.getElementById('location-afternoon');
     const addBtn = document.getElementById('add-entry-btn');
     const logBody = document.getElementById('log-body');
     const totalHoursEl = document.getElementById('total-hours');
@@ -14,12 +14,57 @@ document.addEventListener('DOMContentLoaded', () => {
     const exportBtn = document.getElementById('export-btn');
     const resetBtn = document.getElementById('reset-btn');
     const themeToggle = document.getElementById('theme-toggle');
+    const shareBtn = document.getElementById('share-btn');
+    const newLocationInput = document.getElementById('new-location-input');
+    const addLocationBtn = document.getElementById('add-location-btn');
 
     // Imposta data di oggi
     dateInput.value = new Date().toISOString().split('T')[0];
 
     // Carica dati dal localStorage
     let logEntries = JSON.parse(localStorage.getItem('workLog')) || [];
+    // MODIFICA: La lista dei luoghi ora parte vuota
+    let workLocations = JSON.parse(localStorage.getItem('workLocations')) || [];
+
+    // --- LOGICA GESTIONE LUOGHI ---
+    const populateLocationDropdowns = () => {
+        morningSelect.innerHTML = '';
+        afternoonSelect.innerHTML = '';
+        const defaultOption = new Option('Seleziona luogo...', '');
+        morningSelect.add(defaultOption.cloneNode(true));
+        afternoonSelect.add(defaultOption);
+        workLocations.forEach(location => {
+            const option = new Option(location, location);
+            morningSelect.add(option.cloneNode(true));
+            afternoonSelect.add(option);
+        });
+    };
+
+    addLocationBtn.addEventListener('click', () => {
+        const newLocation = newLocationInput.value.trim();
+        if (newLocation && !workLocations.some(loc => loc.toLowerCase() === newLocation.toLowerCase())) {
+            workLocations.push(newLocation);
+            localStorage.setItem('workLocations', JSON.stringify(workLocations));
+            populateLocationDropdowns();
+            newLocationInput.value = '';
+            addLocationBtn.disabled = true; // Disattiva di nuovo il pulsante dopo l'aggiunta
+        } else if (!newLocation) {
+            alert("Il nome del luogo non può essere vuoto.");
+        } else {
+            alert("Questo luogo esiste già.");
+        }
+    });
+
+    // MODIFICA: Attiva/disattiva il pulsante "Aggiungi"
+    newLocationInput.addEventListener('input', () => {
+        if (newLocationInput.value.trim() !== '') {
+            addLocationBtn.disabled = false;
+        } else {
+            addLocationBtn.disabled = true;
+        }
+    });
+    // Disattiva il pulsante all'avvio
+    addLocationBtn.disabled = true;
 
     // --- LOGICA TEMA SCURO ---
     const applyTheme = (theme) => {
@@ -39,32 +84,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('theme') || 'light';
     applyTheme(savedTheme);
 
-    // --- LOGICA PER NAVIGAZIONE DATA ---
+    // --- LOGICA NAVIGAZIONE DATA ---
     const changeDate = (days) => {
         const currentDate = new Date(dateInput.value);
         currentDate.setDate(currentDate.getDate() + days);
         dateInput.value = currentDate.toISOString().split('T')[0];
+        renderLog();
     };
     prevDayBtn.addEventListener('click', () => changeDate(-1));
     nextDayBtn.addEventListener('click', () => changeDate(1));
+    dateInput.addEventListener('change', () => renderLog());
 
-    // --- LOGICA PER LO SLIDER DELLE ORE ---
+    // --- LOGICA SLIDER ORE ---
     hourSlider.addEventListener('input', () => {
         sliderValue.textContent = `${parseFloat(hourSlider.value).toFixed(1)} h`;
     });
 
-    // --- LOGICA APP ---
+    // --- LOGICA APP PRINCIPALE ---
     const renderLog = () => {
         logBody.innerHTML = '';
         let totalHours = 0;
-        const currentMonth = new Date().getMonth();
-        const currentYear = new Date().getFullYear();
-        currentMonthEl.textContent = new Date(currentYear, currentMonth).toLocaleString('it-IT', { month: 'long', year: 'numeric' });
+        const selectedDate = new Date(dateInput.value + 'T00:00:00');
+        const viewingMonth = selectedDate.getMonth();
+        const viewingYear = selectedDate.getFullYear();
+
+        currentMonthEl.textContent = selectedDate.toLocaleString('it-IT', { month: 'long', year: 'numeric' });
+        
         const filteredEntries = logEntries.filter(entry => {
             const entryDate = new Date(entry.date);
-            return entryDate.getMonth() === currentMonth && entryDate.getFullYear() === currentYear;
+            return entryDate.getMonth() === viewingMonth && entryDate.getFullYear() === viewingYear;
         });
+        
         filteredEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
+        
         filteredEntries.forEach(entry => {
             const row = document.createElement('tr');
             const originalIndex = logEntries.findIndex(e => e.id === entry.id);
@@ -81,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
         totalHoursEl.textContent = totalHours.toFixed(2);
     };
 
-    // --- FUNZIONE DI AGGIUNTA ---
+    // --- FUNZIONE DI AGGIUNTA VOCE ---
     addBtn.addEventListener('click', () => {
         const date = dateInput.value;
         if (!date) {
@@ -95,25 +147,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         const hours = parseFloat(hourSlider.value).toFixed(1);
-        
+        const locationM = morningSelect.value;
+        const locationA = afternoonSelect.value;
+
         logEntries.push({
             id: Date.now(),
             date: date,
             hours: hours,
-            locationM: morningInput.value,
-            locationA: afternoonInput.value
+            locationM: locationM,
+            locationA: locationA
         });
         localStorage.setItem('workLog', JSON.stringify(logEntries));
         
-        morningInput.value = '';
-        afternoonInput.value = '';
-        // Modifica per resettare lo slider a 0
+        morningSelect.value = '';
+        afternoonSelect.value = '';
         hourSlider.value = 0; 
         sliderValue.textContent = '0.0 h';
         
         renderLog();
     });
 
+    // --- FUNZIONI DI CONTROLLO ---
     logBody.addEventListener('click', (e) => {
         if (e.target.classList.contains('delete-btn')) {
             const indexToDelete = e.target.getAttribute('data-index');
@@ -128,23 +182,28 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirmation) {
             logEntries = [];
             localStorage.removeItem('workLog');
+            localStorage.removeItem('workLocations');
+            workLocations = []; // Resetta a lista vuota
+            populateLocationDropdowns();
             renderLog();
         }
     });
     
-    // --- FUNZIONE DI ESPORTAZIONE A DUE COLONNE ---
-    exportBtn.addEventListener('click', () => {
-        const currentMonth = new Date().getMonth();
-        const currentYear = new Date().getFullYear();
+    // --- FUNZIONE DI ESPORTAZIONE E CONDIVISIONE ---
+    const createReportImage = async (share = false, authorName) => {
+        const selectedDate = new Date(dateInput.value + 'T00:00:00');
+        const viewingMonth = selectedDate.getMonth();
+        const viewingYear = selectedDate.getFullYear();
+
         const filteredEntries = logEntries
             .filter(entry => {
                 const entryDate = new Date(entry.date);
-                return entryDate.getMonth() === currentMonth && entryDate.getFullYear() === currentYear;
+                return entryDate.getMonth() === viewingMonth && entryDate.getFullYear() === viewingYear;
             })
             .sort((a, b) => new Date(a.date) - new Date(b.date));
     
         if (filteredEntries.length === 0) {
-            alert("Nessun dato da esportare per il mese corrente.");
+            alert("Nessun dato da esportare per il mese selezionato.");
             return;
         }
     
@@ -163,9 +222,10 @@ document.addEventListener('DOMContentLoaded', () => {
         printContainer.style.color = bodyStyles.getPropertyValue('--text-color');
         printContainer.style.fontFamily = bodyStyles.getPropertyValue('font-family');
     
+        const reportTitle = `Resoconto Ore di ${authorName}`;
         const summaryHTML = `
             <div style="text-align: center; background-color: ${bodyStyles.getPropertyValue('--card-bg-color')}; border-radius: 12px; padding: 18px;">
-                <h2>Riepilogo Mensile</h2>
+                <h2>${reportTitle}</h2>
                 <p>Mese: <strong>${currentMonthEl.textContent}</strong></p>
                 <p style="font-size: 28px; font-weight: 500;">Totale Ore: <strong style="color: ${bodyStyles.getPropertyValue('--primary-accent-color')};">${totalHoursEl.textContent}</strong></p>
             </div>
@@ -211,24 +271,57 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         
         printContainer.innerHTML = summaryHTML + tablesHTML;
-    
         document.body.appendChild(printContainer);
     
-        html2canvas(printContainer, { scale: 2 }).then(canvas => {
-            const image = canvas.toDataURL('image/png');
-            const link = document.createElement('a');
+        try {
+            const canvas = await html2canvas(printContainer, { scale: 2 });
             const monthName = currentMonthEl.textContent.replace(/\s/g, '-');
-            link.download = `Report-Ore-${monthName}.png`;
-            link.href = image;
-            link.click();
-    
-            document.body.removeChild(printContainer);
-        }).catch(err => {
+            const fileName = `Report-Ore-${monthName}-${authorName.replace(/\s/g, '_')}.png`;
+
+            if (share) {
+                canvas.toBlob(async (blob) => {
+                    const file = new File([blob], fileName, { type: "image/png" });
+                    const shareData = { files: [file], title: `Report Ore - ${monthName}` };
+                    if (navigator.canShare && navigator.canShare(shareData)) {
+                        await navigator.share(shareData);
+                    } else {
+                        alert("Funzionalità di condivisione non supportata. Verrà scaricata l'immagine.");
+                        const link = document.createElement('a');
+                        link.href = URL.createObjectURL(blob);
+                        link.download = fileName;
+                        link.click();
+                        URL.revokeObjectURL(link.href);
+                    }
+                }, 'image/png');
+            } else {
+                const image = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.download = fileName;
+                link.href = image;
+                link.click();
+            }
+        } catch (err) {
             console.error("Errore durante la creazione dell'immagine:", err);
+        } finally {
             document.body.removeChild(printContainer);
-        });
+        }
+    };
+
+    shareBtn.addEventListener('click', () => {
+        const name = prompt("Inserisci il tuo nome per personalizzare il report:");
+        if (name) {
+            createReportImage(true, name);
+        }
+    });
+    
+    exportBtn.addEventListener('click', () => {
+        const name = prompt("Inserisci il tuo nome per personalizzare il report:");
+        if (name) {
+            createReportImage(false, name);
+        }
     });
 
-    // Mostra i dati al caricamento della pagina iniziale
+    // Popola i menù e mostra i dati al caricamento iniziale
+    populateLocationDropdowns();
     renderLog();
 });
