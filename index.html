@@ -3,15 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Registro Ore</title>
+    <title>Edil Di Maggio</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
-    <div id="app-container">
-        <header>
-            <h1>Registro Ore</h1>
+    <header class="app-header">
+        <button id="menu-btn" class="menu-btn">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <h1 class="app-title">Edil Di Maggio Snc&c</h1>
+    </header>
+
+    <nav id="side-nav" class="side-nav">
+        <a href="#" id="registro-ore-link" class="nav-link"><i class="fa-solid fa-clock icon"></i>Registro Ore</a>
+        <a href="#" id="formulario-link" class="nav-link"><i class="fa-solid fa-file-lines icon"></i>Formulario</a>
+    </nav>
+    <div id="overlay" class="overlay"></div>
+
+    <main id="registro-ore-page" class="page-container active">
+        <div class="header-controls">
+             <h2><i class="fa-solid fa-calendar-days icon"></i>Registro Ore</h2>
             <div class="theme-switcher">
                 <span>☀️</span>
                 <label class="switch">
@@ -20,45 +36,54 @@
                 </label>
                 <span>🌙</span>
             </div>
-        </header>
+        </div>
 
         <div class="card">
             <div class="date-selector">
-                <button id="prev-day-btn" class="date-nav-btn">-1 G</button>
+                <button id="prev-day-btn" class="date-nav-btn"><i class="fa-solid fa-chevron-left"></i></button>
                 <input type="date" id="entry-date">
-                <button id="next-day-btn" class="date-nav-btn">+1 G</button>
-            </div>
-
-            <div class="slider-container">
-                <div class="slider-container-inner">
-                    <label for="hour-slider">Ore Lavorate:</label>
-                    <input type="range" min="0" max="12" value="0" step="0.5" id="hour-slider">
-                    <span id="slider-value">0.0 h</span>
-                </div>
+                <button id="next-day-btn" class="date-nav-btn"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
             
             <div class="location-manager">
                 <hr>
-                <h2>Gestisci Luoghi</h2>
+                <h3><i class="fa-solid fa-map-location-dot icon"></i>Gestisci Luoghi</h3>
                 <div class="add-location-form">
                     <input type="text" id="new-location-input" placeholder="Nuovo luogo di lavoro...">
-                    <button id="add-location-btn">Aggiungi</button>
+                    <button id="add-location-btn"><i class="fa-solid fa-plus"></i></button>
                 </div>
             </div>
             
             <hr>
 
-            <select id="location-morning"></select>
-            <select id="location-afternoon"></select>
+            <div class="cantiere-block">
+                <h4><i class="fa-solid fa-sun icon"></i>Cantiere 1 (Mattina)</h4>
+                <select id="location-morning"></select>
+                <label class="hour-label">Ore Lavorate:</label>
+                <div class="hour-selector" id="hour-selector-morning"></div>
+                <input type="hidden" id="hours-morning" value="0">
+            </div>
 
-            <button id="add-entry-btn">Aggiungi Voce</button>
+            <hr>
+
+            <div class="cantiere-block">
+                <h4><i class="fa-solid fa-moon icon"></i>Cantiere 2 (Pomeriggio)</h4>
+                <select id="location-afternoon"></select>
+                <label class="hour-label">Ore Lavorate:</label>
+                <div class="hour-selector" id="hour-selector-afternoon"></div>
+                 <input type="hidden" id="hours-afternoon" value="0">
+            </div>
+
+            <button id="add-entry-btn"><i class="fa-solid fa-check icon"></i>Aggiungi Voce</button>
         </div>
 
         <div id="export-wrapper">
             <div class="card" id="summary">
-                <h2>Riepilogo Mensile</h2>
+                <h2><i class="fa-solid fa-chart-pie icon"></i>Riepilogo Mensile</h2>
                 <p>Mese: <strong id="current-month"></strong></p>
-                <p class="total-hours-display">Totale Ore: <strong id="total-hours">0</strong></p>
+                <div id="location-summary"></div>
+                <hr style="margin: 15px 0;">
+                <p class="total-hours-display">Totale Ore Complessive: <strong id="total-hours">0</strong></p>
             </div>
 
             <div class="card" id="table-container">
@@ -66,23 +91,68 @@
                     <thead>
                         <tr>
                             <th>Data</th>
+                            <th>Cantiere 1</th>
                             <th>Ore</th>
-                            <th>Mattina</th>
-                            <th>Pomeriggio</th>
+                            <th>Cantiere 2</th>
+                            <th>Ore</th>
+                            <th>Tot. Giorno</th>
                             <th></th>
                         </tr>
                     </thead>
-                    <tbody id="log-body">
-                    </tbody>
+                    <tbody id="log-body"></tbody>
                 </table>
             </div>
         </div>
         
         <div class="card actions-card">
-             <button id="export-btn" class="action-btn">Crea Immagine</button>
-             <button id="share-btn" class="action-btn share">Condividi Immagine</button> 
-             <button id="reset-btn" class="action-btn destructive">Resetta Dati</button>
+             <button id="export-btn" class="action-btn"><i class="fa-solid fa-image icon"></i>Crea Immagine</button>
+             <button id="share-btn" class="action-btn share"><i class="fa-solid fa-share-nodes icon"></i>Condividi Immagine</button> 
+             <button id="reset-btn" class="action-btn destructive"><i class="fa-solid fa-trash-can icon"></i>Resetta Dati</button>
         </div>
+    </main>
+
+    <section id="formulario-page" class="page-container">
+        <div class="card">
+            <div id="albo-info-container">
+                <table>
+                    <tbody>
+                        <tr>
+                            <td><strong><i class="fa-solid fa-certificate icon"></i>Numero iscrizione albo:</strong></td>
+                            <td>TO/34423</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <hr>
+            
+            <h2><i class="fa-solid fa-recycle icon"></i>Formulario Rifiuti (Codici CER)</h2>
+            <p>Elenco di esempio dei principali codici CER per l'edilizia.</p>
+            <div id="formulario-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Codice CER</th>
+                            <th>Descrizione</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>17 02 01</td><td>Legno</td></tr>
+                        <tr><td>17 01 07</td><td>Macerie miste (cemento, mattoni, mattonelle, ecc.)</td></tr>
+                        <tr><td>17 09 04</td><td>Rifiuti misti dell'attività di costruzione e demolizione</td></tr>
+                        <tr><td>17 08 02</td><td>Cartongesso</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <hr>
+            <h3><i class="fa-solid fa-image icon"></i>Esempio Compilazione FIR</h3>
+            <p>Tocca l'immagine per ingrandirla.</p>
+            <img src="images/formulario.jpg" id="esempio-fir" class="image-example" alt="Esempio compilazione formulario">
+        </div>
+    </section>
+
+    <div id="image-modal" class="modal-overlay">
+        <span id="modal-close-btn" class="modal-close">&times;</span>
+        <img class="modal-content" id="modal-image">
     </div>
 
     <script src="script.js"></script>

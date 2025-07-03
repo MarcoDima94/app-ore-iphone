@@ -1,205 +1,162 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Elementi del DOM
-    const dateInput = document.getElementById('entry-date');
-    const prevDayBtn = document.getElementById('prev-day-btn');
-    const nextDayBtn = document.getElementById('next-day-btn');
-    const hourSlider = document.getElementById('hour-slider');
-    const sliderValue = document.getElementById('slider-value');
-    const morningSelect = document.getElementById('location-morning');
-    const afternoonSelect = document.getElementById('location-afternoon');
-    const addBtn = document.getElementById('add-entry-btn');
-    const logBody = document.getElementById('log-body');
-    const totalHoursEl = document.getElementById('total-hours');
-    const currentMonthEl = document.getElementById('current-month');
-    const exportBtn = document.getElementById('export-btn');
-    const resetBtn = document.getElementById('reset-btn');
-    const themeToggle = document.getElementById('theme-toggle');
-    const shareBtn = document.getElementById('share-btn');
-    const newLocationInput = document.getElementById('new-location-input');
-    const addLocationBtn = document.getElementById('add-location-btn');
 
-    // Imposta data di oggi
-    dateInput.value = new Date().toISOString().split('T')[0];
+    // --- COSTANTI E STATO DELL'APPLICAZIONE ---
 
-    // Carica dati dal localStorage
-    let logEntries = JSON.parse(localStorage.getItem('workLog')) || [];
-    // MODIFICA: La lista dei luoghi ora parte vuota
-    let workLocations = JSON.parse(localStorage.getItem('workLocations')) || [];
+    const STORAGE_KEYS = {
+        LOG: 'workLog',
+        LOCATIONS: 'workLocations',
+        THEME: 'theme'
+    };
 
-    // --- LOGICA GESTIONE LUOGHI ---
+    let state = {
+        logEntries: JSON.parse(localStorage.getItem(STORAGE_KEYS.LOG)) || [],
+        workLocations: JSON.parse(localStorage.getItem(STORAGE_KEYS.LOCATIONS)) || [],
+        theme: localStorage.getItem(STORAGE_KEYS.THEME) || 'light'
+    };
+
+    // --- SELETTORI ELEMENTI DOM ---
+    
+    const DOMElements = {
+        menuBtn: document.getElementById('menu-btn'),
+        sideNav: document.getElementById('side-nav'),
+        overlay: document.getElementById('overlay'),
+        registroOreLink: document.getElementById('registro-ore-link'),
+        formularioLink: document.getElementById('formulario-link'),
+        allPages: document.querySelectorAll('.page-container'),
+        registroOrePage: document.getElementById('registro-ore-page'),
+        dateInput: document.getElementById('entry-date'),
+        prevDayBtn: document.getElementById('prev-day-btn'),
+        nextDayBtn: document.getElementById('next-day-btn'),
+        newLocationInput: document.getElementById('new-location-input'),
+        addLocationBtn: document.getElementById('add-location-btn'),
+        morningSelect: document.getElementById('location-morning'),
+        afternoonSelect: document.getElementById('location-afternoon'),
+        hourSelectorMorning: document.getElementById('hour-selector-morning'),
+        hourSelectorAfternoon: document.getElementById('hour-selector-afternoon'),
+        hoursMorningInput: document.getElementById('hours-morning'),
+        hoursAfternoonInput: document.getElementById('hours-afternoon'),
+        addEntryBtn: document.getElementById('add-entry-btn'),
+        logBody: document.getElementById('log-body'),
+        totalHoursEl: document.getElementById('total-hours'),
+        currentMonthEl: document.getElementById('current-month'),
+        locationSummaryEl: document.getElementById('location-summary'),
+        exportBtn: document.getElementById('export-btn'),
+        shareBtn: document.getElementById('share-btn'),
+        resetBtn: document.getElementById('reset-btn'),
+        themeToggle: document.getElementById('theme-toggle'),
+    };
+
+    // --- FUNZIONI LOGICHE ---
+
+    const saveState = (key, data) => {
+        localStorage.setItem(key, JSON.stringify(data));
+    };
+
+    const showPage = (pageId) => {
+        DOMElements.allPages.forEach(page => page.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        if (DOMElements.sideNav.classList.contains('open')) {
+            toggleMenu();
+        }
+    };
+
+    const toggleMenu = () => {
+        DOMElements.sideNav.classList.toggle('open');
+        DOMElements.overlay.classList.toggle('show');
+    };
+
     const populateLocationDropdowns = () => {
-        morningSelect.innerHTML = '';
-        afternoonSelect.innerHTML = '';
-        const defaultOption = new Option('Seleziona luogo...', '');
-        morningSelect.add(defaultOption.cloneNode(true));
-        afternoonSelect.add(defaultOption);
-        workLocations.forEach(location => {
-            const option = new Option(location, location);
-            morningSelect.add(option.cloneNode(true));
-            afternoonSelect.add(option);
+        [DOMElements.morningSelect, DOMElements.afternoonSelect].forEach((select, index) => {
+            select.innerHTML = '';
+            const placeholder = index === 0 ? 'Seleziona Cantiere 1...' : 'Seleziona Cantiere 2...';
+            select.add(new Option(placeholder, ''));
+            state.workLocations.forEach(location => select.add(new Option(location, location)));
         });
     };
 
-    addLocationBtn.addEventListener('click', () => {
-        const newLocation = newLocationInput.value.trim();
-        if (newLocation && !workLocations.some(loc => loc.toLowerCase() === newLocation.toLowerCase())) {
-            workLocations.push(newLocation);
-            localStorage.setItem('workLocations', JSON.stringify(workLocations));
-            populateLocationDropdowns();
-            newLocationInput.value = '';
-            addLocationBtn.disabled = true; // Disattiva di nuovo il pulsante dopo l'aggiunta
-        } else if (!newLocation) {
-            alert("Il nome del luogo non può essere vuoto.");
-        } else {
-            alert("Questo luogo esiste già.");
-        }
-    });
-
-    // MODIFICA: Attiva/disattiva il pulsante "Aggiungi"
-    newLocationInput.addEventListener('input', () => {
-        if (newLocationInput.value.trim() !== '') {
-            addLocationBtn.disabled = false;
-        } else {
-            addLocationBtn.disabled = true;
-        }
-    });
-    // Disattiva il pulsante all'avvio
-    addLocationBtn.disabled = true;
-
-    // --- LOGICA TEMA SCURO ---
     const applyTheme = (theme) => {
-        if (theme === 'dark') {
-            document.body.classList.add('dark-theme');
-            themeToggle.checked = true;
-        } else {
-            document.body.classList.remove('dark-theme');
-            themeToggle.checked = false;
+        document.body.classList.toggle('dark-theme', theme === 'dark');
+        DOMElements.themeToggle.checked = theme === 'dark';
+    };
+
+    const createHourButtons = (container) => {
+        for (let i = 0; i <= 10; i++) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'hour-button';
+            button.textContent = i;
+            button.dataset.hours = i;
+            container.appendChild(button);
         }
     };
-    themeToggle.addEventListener('change', () => {
-        const newTheme = themeToggle.checked ? 'dark' : 'light';
-        localStorage.setItem('theme', newTheme);
-        applyTheme(newTheme);
-    });
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    applyTheme(savedTheme);
-
-    // --- LOGICA NAVIGAZIONE DATA ---
-    const changeDate = (days) => {
-        const currentDate = new Date(dateInput.value);
-        currentDate.setDate(currentDate.getDate() + days);
-        dateInput.value = currentDate.toISOString().split('T')[0];
-        renderLog();
-    };
-    prevDayBtn.addEventListener('click', () => changeDate(-1));
-    nextDayBtn.addEventListener('click', () => changeDate(1));
-    dateInput.addEventListener('change', () => renderLog());
-
-    // --- LOGICA SLIDER ORE ---
-    hourSlider.addEventListener('input', () => {
-        sliderValue.textContent = `${parseFloat(hourSlider.value).toFixed(1)} h`;
-    });
-
-    // --- LOGICA APP PRINCIPALE ---
+    
     const renderLog = () => {
-        logBody.innerHTML = '';
+        DOMElements.logBody.innerHTML = '';
+        DOMElements.locationSummaryEl.innerHTML = '';
+
         let totalHours = 0;
-        const selectedDate = new Date(dateInput.value + 'T00:00:00');
+        const locationTotals = {};
+
+        const selectedDate = new Date(DOMElements.dateInput.value + 'T00:00:00');
         const viewingMonth = selectedDate.getMonth();
         const viewingYear = selectedDate.getFullYear();
 
-        currentMonthEl.textContent = selectedDate.toLocaleString('it-IT', { month: 'long', year: 'numeric' });
-        
-        const filteredEntries = logEntries.filter(entry => {
-            const entryDate = new Date(entry.date);
-            return entryDate.getMonth() === viewingMonth && entryDate.getFullYear() === viewingYear;
-        });
-        
-        filteredEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
-        
-        filteredEntries.forEach(entry => {
-            const row = document.createElement('tr');
-            const originalIndex = logEntries.findIndex(e => e.id === entry.id);
-            row.innerHTML = `
-                <td>${new Date(entry.date).toLocaleDateString('it-IT', {day: '2-digit', month: 'short'})}</td>
-                <td>${entry.hours}</td>
-                <td>${entry.locationM}</td>
-                <td>${entry.locationA}</td>
-                <td><button class="delete-btn" data-index="${originalIndex}">X</button></td>
-            `;
-            logBody.appendChild(row);
-            totalHours += parseFloat(entry.hours) || 0;
-        });
-        totalHoursEl.textContent = totalHours.toFixed(2);
-    };
+        DOMElements.currentMonthEl.textContent = selectedDate.toLocaleString('it-IT', { month: 'long', year: 'numeric' });
 
-    // --- FUNZIONE DI AGGIUNTA VOCE ---
-    addBtn.addEventListener('click', () => {
-        const date = dateInput.value;
-        if (!date) {
-            alert('Per favore, inserisci una data.');
-            return;
-        }
-        const isDateDuplicate = logEntries.some(entry => entry.date === date);
-        if (isDateDuplicate) {
-            alert('Errore: Questa data è già presente nel registro.');
-            return;
-        }
-        
-        const hours = parseFloat(hourSlider.value).toFixed(1);
-        const locationM = morningSelect.value;
-        const locationA = afternoonSelect.value;
-
-        logEntries.push({
-            id: Date.now(),
-            date: date,
-            hours: hours,
-            locationM: locationM,
-            locationA: locationA
-        });
-        localStorage.setItem('workLog', JSON.stringify(logEntries));
-        
-        morningSelect.value = '';
-        afternoonSelect.value = '';
-        hourSlider.value = 0; 
-        sliderValue.textContent = '0.0 h';
-        
-        renderLog();
-    });
-
-    // --- FUNZIONI DI CONTROLLO ---
-    logBody.addEventListener('click', (e) => {
-        if (e.target.classList.contains('delete-btn')) {
-            const indexToDelete = e.target.getAttribute('data-index');
-            logEntries.splice(indexToDelete, 1);
-            localStorage.setItem('workLog', JSON.stringify(logEntries));
-            renderLog();
-        }
-    });
-    
-    resetBtn.addEventListener('click', () => {
-        const confirmation = confirm("Sei sicuro di voler cancellare TUTTI i dati? L'azione non è reversibile.");
-        if (confirmation) {
-            logEntries = [];
-            localStorage.removeItem('workLog');
-            localStorage.removeItem('workLocations');
-            workLocations = []; // Resetta a lista vuota
-            populateLocationDropdowns();
-            renderLog();
-        }
-    });
-    
-    // --- FUNZIONE DI ESPORTAZIONE E CONDIVISIONE ---
-    const createReportImage = async (share = false, authorName) => {
-        const selectedDate = new Date(dateInput.value + 'T00:00:00');
-        const viewingMonth = selectedDate.getMonth();
-        const viewingYear = selectedDate.getFullYear();
-
-        const filteredEntries = logEntries
+        const filteredEntries = state.logEntries
             .filter(entry => {
                 const entryDate = new Date(entry.date);
                 return entryDate.getMonth() === viewingMonth && entryDate.getFullYear() === viewingYear;
             })
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        filteredEntries.forEach(entry => {
+            const hoursM = parseFloat(entry.hoursM || 0);
+            const hoursA = parseFloat(entry.hoursA || 0);
+            const dailyTotal = hoursM + hoursA;
+            const originalIndex = state.logEntries.findIndex(e => e.id === entry.id);
+
+            const row = DOMElements.logBody.insertRow();
+            row.innerHTML = `
+                <td>${new Date(entry.date).toLocaleDateString('it-IT', {day: '2-digit', month: 'short'})}</td>
+                <td>${entry.locationM || '-'}</td>
+                <td>${hoursM > 0 ? hoursM.toFixed(1) : '-'}</td>
+                <td>${entry.locationA || '-'}</td>
+                <td>${hoursA > 0 ? hoursA.toFixed(1) : '-'}</td>
+                <td style="font-weight: bold;">${dailyTotal > 0 ? dailyTotal.toFixed(1) : '-'}</td>
+                <td><button class="delete-btn" data-index="${originalIndex}"><i class="fa-solid fa-xmark"></i></button></td>
+            `;
+
+            totalHours += dailyTotal;
+            if (hoursM > 0 && entry.locationM) {
+                locationTotals[entry.locationM] = (locationTotals[entry.locationM] || 0) + hoursM;
+            }
+            if (hoursA > 0 && entry.locationA) {
+                locationTotals[entry.locationA] = (locationTotals[entry.locationA] || 0) + hoursA;
+            }
+        });
+
+        DOMElements.totalHoursEl.textContent = totalHours.toFixed(1);
+        Object.keys(locationTotals).sort().forEach(location => {
+            const p = document.createElement('p');
+            p.innerHTML = `Ore ${location}: <strong>${locationTotals[location].toFixed(1)}</strong>`;
+            DOMElements.locationSummaryEl.appendChild(p);
+        });
+    };
+
+    /**
+     * MODIFICATA: La logica di creazione della tabella ora divide i giorni in due colonne.
+     */
+    const createReportImage = async (share = false) => {
+        const name = prompt("Inserisci il tuo nome per personalizzare il report:");
+        if (!name) return;
+
+        const selectedDate = new Date(DOMElements.dateInput.value + 'T00:00:00');
+        const viewingMonth = selectedDate.getMonth();
+        const viewingYear = selectedDate.getFullYear();
+
+        const filteredEntries = state.logEntries
+            .filter(entry => new Date(entry.date).getMonth() === viewingMonth && new Date(entry.date).getFullYear() === viewingYear)
             .sort((a, b) => new Date(a.date) - new Date(b.date));
     
         if (filteredEntries.length === 0) {
@@ -209,119 +166,272 @@ document.addEventListener('DOMContentLoaded', () => {
     
         const printContainer = document.createElement('div');
         printContainer.id = 'print-container';
-        printContainer.style.position = 'absolute';
-        printContainer.style.left = '-9999px';
-        printContainer.style.padding = '20px';
-        printContainer.style.display = 'flex';
-        printContainer.style.flexDirection = 'column';
-        printContainer.style.gap = '20px';
-        printContainer.style.width = '800px'; 
-        
+        Object.assign(printContainer.style, {
+            position: 'absolute', left: '-9999px', padding: '20px',
+            width: '800px', display: 'flex', flexDirection: 'column', gap: '20px',
+            backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-color'),
+            color: getComputedStyle(document.body).getPropertyValue('--text-color'),
+            fontFamily: getComputedStyle(document.body).getPropertyValue('font-family')
+        });
+
+        let grandTotalHours = 0;
+        const locationTotals = {};
+        filteredEntries.forEach(entry => {
+            const hoursM = parseFloat(entry.hoursM || 0);
+            const hoursA = parseFloat(entry.hoursA || 0);
+            grandTotalHours += hoursM + hoursA;
+            if (hoursM > 0 && entry.locationM) locationTotals[entry.locationM] = (locationTotals[entry.locationM] || 0) + hoursM;
+            if (hoursA > 0 && entry.locationA) locationTotals[entry.locationA] = (locationTotals[entry.locationA] || 0) + hoursA;
+        });
+
+        let locationSummaryHTML = '';
+        Object.keys(locationTotals).sort().forEach(loc => {
+            locationSummaryHTML += `<p style="margin: 4px 0; font-size: 16px;">Ore ${loc}: <strong>${locationTotals[loc].toFixed(1)}</strong></p>`;
+        });
+
         const bodyStyles = getComputedStyle(document.body);
-        printContainer.style.backgroundColor = bodyStyles.getPropertyValue('--bg-color');
-        printContainer.style.color = bodyStyles.getPropertyValue('--text-color');
-        printContainer.style.fontFamily = bodyStyles.getPropertyValue('font-family');
-    
-        const reportTitle = `Resoconto Ore di ${authorName}`;
         const summaryHTML = `
             <div style="text-align: center; background-color: ${bodyStyles.getPropertyValue('--card-bg-color')}; border-radius: 12px; padding: 18px;">
-                <h2>${reportTitle}</h2>
-                <p>Mese: <strong>${currentMonthEl.textContent}</strong></p>
-                <p style="font-size: 28px; font-weight: 500;">Totale Ore: <strong style="color: ${bodyStyles.getPropertyValue('--primary-accent-color')};">${totalHoursEl.textContent}</strong></p>
-            </div>
-        `;
-    
+                <h2>Resoconto Ore di ${name}</h2>
+                <p>Mese: <strong>${DOMElements.currentMonthEl.textContent}</strong></p>
+                <div style="text-align: center; margin: 15px 0;">${locationSummaryHTML}</div>
+                <p style="font-size: 24px; font-weight: 500; border-top: 1px solid ${bodyStyles.getPropertyValue('--border-color')}; padding-top: 15px; margin-top: 15px;">
+                    Totale Ore Complessive: <strong style="color: ${bodyStyles.getPropertyValue('--primary-accent-color')};">${grandTotalHours.toFixed(1)}</strong>
+                </p>
+            </div>`;
+
+        // ==================================================================
+        // MODIFICA PRINCIPALE: Suddivisione della tabella in due colonne
+        // ==================================================================
+
         const createTableHTML = (data) => {
-            if (data.length === 0) return '';
-            let rows = '';
-            data.forEach(entry => {
-                rows += `
+            if (data.length === 0) return '<div></div>'; // Restituisce un div vuoto se non ci sono dati
+            const rows = data.map(entry => {
+                const hoursM = parseFloat(entry.hoursM || 0);
+                const hoursA = parseFloat(entry.hoursA || 0);
+                const dailyTotal = hoursM + hoursA;
+                return `
                     <tr>
-                        <td style="padding: 12px; border-bottom: 1px solid ${bodyStyles.getPropertyValue('--border-color')};">${new Date(entry.date).toLocaleDateString('it-IT', {day: '2-digit', month: 'short'})}</td>
-                        <td style="padding: 12px; border-bottom: 1px solid ${bodyStyles.getPropertyValue('--border-color')};">${entry.hours}</td>
-                        <td style="padding: 12px; border-bottom: 1px solid ${bodyStyles.getPropertyValue('--border-color')};">${entry.locationM}</td>
-                        <td style="padding: 12px; border-bottom: 1px solid ${bodyStyles.getPropertyValue('--border-color')};">${entry.locationA}</td>
-                    </tr>
-                `;
-            });
+                        <td style="padding: 10px; border-bottom: 1px solid ${bodyStyles.getPropertyValue('--border-color')};">${new Date(entry.date).toLocaleDateString('it-IT', {day: '2-digit', month: 'short'})}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid ${bodyStyles.getPropertyValue('--border-color')};">${entry.locationM || '-'}</td>
+                        <td style="padding: 10px; text-align: center; border-bottom: 1px solid ${bodyStyles.getPropertyValue('--border-color')};">${hoursM > 0 ? hoursM.toFixed(1) : '-'}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid ${bodyStyles.getPropertyValue('--border-color')};">${entry.locationA || '-'}</td>
+                        <td style="padding: 10px; text-align: center; border-bottom: 1px solid ${bodyStyles.getPropertyValue('--border-color')};">${hoursA > 0 ? hoursA.toFixed(1) : '-'}</td>
+                        <td style="padding: 10px; text-align: center; font-weight: bold; border-bottom: 1px solid ${bodyStyles.getPropertyValue('--border-color')};">${dailyTotal > 0 ? dailyTotal.toFixed(1) : '-'}</td>
+                    </tr>`;
+            }).join('');
     
             return `
-                <table style="width: 100%; border-collapse: collapse; background-color: ${bodyStyles.getPropertyValue('--card-bg-color')}; border-radius: 12px; overflow: hidden;">
+                <table style="width: 100%; border-collapse: collapse; background-color: ${bodyStyles.getPropertyValue('--card-bg-color')}; border-radius: 12px; overflow: hidden; font-size: 14px;">
                     <thead>
                         <tr>
-                            <th style="padding: 12px; text-align: left; color: ${bodyStyles.getPropertyValue('--secondary-text-color')}; border-bottom: 1px solid ${bodyStyles.getPropertyValue('--border-color')};">Data</th>
-                            <th style="padding: 12px; text-align: left; color: ${bodyStyles.getPropertyValue('--secondary-text-color')}; border-bottom: 1px solid ${bodyStyles.getPropertyValue('--border-color')};">Ore</th>
-                            <th style="padding: 12px; text-align: left; color: ${bodyStyles.getPropertyValue('--secondary-text-color')}; border-bottom: 1px solid ${bodyStyles.getPropertyValue('--border-color')};">Mattina</th>
-                            <th style="padding: 12px; text-align: left; color: ${bodyStyles.getPropertyValue('--secondary-text-color')}; border-bottom: 1px solid ${bodyStyles.getPropertyValue('--border-color')};">Pomeriggio</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid ${bodyStyles.getPropertyValue('--border-color')};">Data</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid ${bodyStyles.getPropertyValue('--border-color')};">Cantiere 1</th>
+                            <th style="padding: 12px; text-align: center; border-bottom: 1px solid ${bodyStyles.getPropertyValue('--border-color')};">Ore</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid ${bodyStyles.getPropertyValue('--border-color')};">Cantiere 2</th>
+                            <th style="padding: 12px; text-align: center; border-bottom: 1px solid ${bodyStyles.getPropertyValue('--border-color')};">Ore</th>
+                            <th style="padding: 12px; text-align: center; border-bottom: 1px solid ${bodyStyles.getPropertyValue('--border-color')};">Tot. Giorno</th>
                         </tr>
                     </thead>
                     <tbody>${rows}</tbody>
-                </table>
-            `;
+                </table>`;
         };
-    
-        const firstColumnData = filteredEntries.slice(0, 15);
-        const secondColumnData = filteredEntries.slice(15);
-        
+
+        // Suddividi i dati per le due colonne
+        const firstHalfEntries = filteredEntries.filter(e => new Date(e.date).getDate() <= 15);
+        const secondHalfEntries = filteredEntries.filter(e => new Date(e.date).getDate() > 15);
+
+        // Crea il contenitore flessibile per le due tabelle
         const tablesHTML = `
             <div style="display: flex; gap: 20px; align-items: flex-start;">
-                <div style="flex: 1;">${createTableHTML(firstColumnData)}</div>
-                <div style="flex: 1;">${createTableHTML(secondColumnData)}</div>
+                <div style="flex: 1;">
+                    ${createTableHTML(firstHalfEntries)}
+                </div>
+                <div style="flex: 1;">
+                    ${createTableHTML(secondHalfEntries)}
+                </div>
             </div>
         `;
         
         printContainer.innerHTML = summaryHTML + tablesHTML;
+        // ==================================================================
+        // FINE MODIFICA
+        // ==================================================================
+        
         document.body.appendChild(printContainer);
     
         try {
             const canvas = await html2canvas(printContainer, { scale: 2 });
-            const monthName = currentMonthEl.textContent.replace(/\s/g, '-');
-            const fileName = `Report-Ore-${monthName}-${authorName.replace(/\s/g, '_')}.png`;
+            const fileName = `Report-Ore-${DOMElements.currentMonthEl.textContent.replace(/\s/g, '-')}-${name.replace(/\s/g, '_')}.png`;
 
-            if (share) {
+            if (share && navigator.share) {
                 canvas.toBlob(async (blob) => {
                     const file = new File([blob], fileName, { type: "image/png" });
-                    const shareData = { files: [file], title: `Report Ore - ${monthName}` };
-                    if (navigator.canShare && navigator.canShare(shareData)) {
-                        await navigator.share(shareData);
-                    } else {
-                        alert("Funzionalità di condivisione non supportata. Verrà scaricata l'immagine.");
-                        const link = document.createElement('a');
-                        link.href = URL.createObjectURL(blob);
-                        link.download = fileName;
-                        link.click();
-                        URL.revokeObjectURL(link.href);
+                    try {
+                        await navigator.share({ files: [file], title: `Report Ore - ${DOMElements.currentMonthEl.textContent}` });
+                    } catch (err) {
+                        console.error("Errore condivisione:", err);
+                        alert("Condivisione annullata o non riuscita.");
                     }
                 }, 'image/png');
             } else {
-                const image = canvas.toDataURL('image/png');
                 const link = document.createElement('a');
+                link.href = canvas.toDataURL('image/png');
                 link.download = fileName;
-                link.href = image;
                 link.click();
             }
         } catch (err) {
-            console.error("Errore durante la creazione dell'immagine:", err);
+            console.error("Errore creazione immagine:", err);
         } finally {
             document.body.removeChild(printContainer);
         }
     };
 
-    shareBtn.addEventListener('click', () => {
-        const name = prompt("Inserisci il tuo nome:");
-        if (name) {
-            createReportImage(true, name);
-        }
-    });
-    
-    exportBtn.addEventListener('click', () => {
-        const name = prompt("Inserisci il tuo nome:");
-        if (name) {
-            createReportImage(false, name);
-        }
-    });
 
-    // Popola i menù e mostra i dati al caricamento iniziale
-    populateLocationDropdowns();
-    renderLog();
+    // --- GESTIONE DEGLI EVENTI e FUNZIONI HANDLER ---
+    
+    function setupEventListeners() {
+        DOMElements.menuBtn.addEventListener('click', toggleMenu);
+        DOMElements.overlay.addEventListener('click', toggleMenu);
+        DOMElements.registroOreLink.addEventListener('click', (e) => { e.preventDefault(); showPage('registro-ore-page'); });
+        DOMElements.formularioLink.addEventListener('click', (e) => { e.preventDefault(); showPage('formulario-page'); });
+        DOMElements.prevDayBtn.addEventListener('click', () => {
+            const currentDate = new Date(DOMElements.dateInput.value);
+            currentDate.setDate(currentDate.getDate() - 1);
+            DOMElements.dateInput.value = currentDate.toISOString().split('T')[0];
+            renderLog();
+        });
+        DOMElements.nextDayBtn.addEventListener('click', () => {
+            const currentDate = new Date(DOMElements.dateInput.value);
+            currentDate.setDate(currentDate.getDate() + 1);
+            DOMElements.dateInput.value = currentDate.toISOString().split('T')[0];
+            renderLog();
+        });
+        DOMElements.dateInput.addEventListener('change', renderLog);
+        DOMElements.hourSelectorMorning.addEventListener('click', (e) => handleHourSelection(e, DOMElements.hourSelectorMorning, DOMElements.hoursMorningInput));
+        DOMElements.hourSelectorAfternoon.addEventListener('click', (e) => handleHourSelection(e, DOMElements.hourSelectorAfternoon, DOMElements.hoursAfternoonInput));
+        DOMElements.addEntryBtn.addEventListener('click', handleAddEntry);
+        DOMElements.logBody.addEventListener('click', handleDeleteEntry);
+        DOMElements.resetBtn.addEventListener('click', handleReset);
+        DOMElements.exportBtn.addEventListener('click', () => createReportImage(false));
+        DOMElements.shareBtn.addEventListener('click', () => createReportImage(true));
+        DOMElements.themeToggle.addEventListener('change', handleThemeToggle);
+        DOMElements.addLocationBtn.addEventListener('click', handleAddLocation);
+        DOMElements.newLocationInput.addEventListener('input', () => {
+             DOMElements.addLocationBtn.disabled = DOMElements.newLocationInput.value.trim() === '';
+        });
+    }
+
+    function handleHourSelection(e, container, hiddenInput) {
+        const clickedButton = e.target.closest('.hour-button');
+        if (!clickedButton) return;
+
+        const currentActive = container.querySelector('.hour-button.active');
+        const hours = clickedButton.dataset.hours;
+
+        if (currentActive === clickedButton) {
+            clickedButton.classList.remove('active');
+            hiddenInput.value = '0';
+        } else {
+            if (currentActive) currentActive.classList.remove('active');
+            clickedButton.classList.add('active');
+            hiddenInput.value = hours;
+        }
+    }
+
+    function handleAddLocation() {
+        const newLocation = DOMElements.newLocationInput.value.trim();
+        if (newLocation && !state.workLocations.some(loc => loc.toLowerCase() === newLocation.toLowerCase())) {
+            state.workLocations.push(newLocation);
+            saveState(STORAGE_KEYS.LOCATIONS, state.workLocations);
+            populateLocationDropdowns();
+            DOMElements.newLocationInput.value = '';
+            DOMElements.addLocationBtn.disabled = true;
+        } else if (!newLocation) {
+            alert("Il nome del luogo non può essere vuoto.");
+        } else {
+            alert("Questo luogo esiste già.");
+        }
+    }
+    
+    function handleThemeToggle() {
+        state.theme = DOMElements.themeToggle.checked ? 'dark' : 'light';
+        localStorage.setItem(STORAGE_KEYS.THEME, state.theme);
+        applyTheme(state.theme);
+    }
+    
+    function handleAddEntry() {
+        const date = DOMElements.dateInput.value;
+        if (!date) {
+            alert('Per favore, inserisci una data.');
+            return;
+        }
+        if (state.logEntries.some(entry => entry.date === date)) {
+            alert('Errore: Questa data è già presente nel registro.');
+            return;
+        }
+        
+        const hoursM = parseFloat(DOMElements.hoursMorningInput.value);
+        const hoursA = parseFloat(DOMElements.hoursAfternoonInput.value);
+
+        if (hoursM === 0 && hoursA === 0) {
+            alert('Inserire almeno un valore di ore lavorate.');
+            return;
+        }
+
+        state.logEntries.push({
+            id: Date.now(),
+            date: date,
+            hoursM: hoursM.toFixed(1),
+            hoursA: hoursA.toFixed(1),
+            locationM: DOMElements.morningSelect.value,
+            locationA: DOMElements.afternoonSelect.value
+        });
+        saveState(STORAGE_KEYS.LOG, state.logEntries);
+        
+        DOMElements.morningSelect.value = '';
+        DOMElements.afternoonSelect.value = '';
+        [DOMElements.hourSelectorMorning, DOMElements.hourSelectorAfternoon].forEach(sel => sel.querySelector('.active')?.classList.remove('active'));
+        DOMElements.hoursMorningInput.value = '0';
+        DOMElements.hoursAfternoonInput.value = '0';
+        
+        renderLog();
+    }
+    
+    function handleDeleteEntry(e) {
+        const deleteBtn = e.target.closest('.delete-btn');
+        if (deleteBtn) {
+            const indexToDelete = deleteBtn.dataset.index;
+            state.logEntries.splice(indexToDelete, 1);
+            saveState(STORAGE_KEYS.LOG, state.logEntries);
+            renderLog();
+        }
+    }
+    
+    function handleReset() {
+        if (confirm("Sei sicuro di voler cancellare TUTTI i dati? L'azione non è reversibile.")) {
+            localStorage.removeItem(STORAGE_KEYS.LOG);
+            localStorage.removeItem(STORAGE_KEYS.LOCATIONS);
+            state.logEntries = [];
+            state.workLocations = [];
+            populateLocationDropdowns();
+            renderLog();
+        }
+    }
+
+    // --- INIZIALIZZAZIONE DELL'APP ---
+
+    function init() {
+        DOMElements.dateInput.value = new Date().toISOString().split('T')[0];
+        DOMElements.addLocationBtn.disabled = true;
+        
+        applyTheme(state.theme);
+        createHourButtons(DOMElements.hourSelectorMorning);
+        createHourButtons(DOMElements.hourSelectorAfternoon);
+        populateLocationDropdowns();
+        setupEventListeners();
+        renderLog();
+    }
+
+    init();
 });
