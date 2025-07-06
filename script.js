@@ -1,3 +1,16 @@
+
+// --- REGISTRAZIONE DEL SERVICE WORKER ---
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(registration => {
+        console.log('Service Worker registrato con successo:', registration);
+      })
+      .catch(error => {
+        console.log('Registrazione del Service Worker fallita:', error);
+      });
+  });
+}
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- COSTANTI E STATO DELL'APPLICAZIONE ---
@@ -144,9 +157,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    /**
-     * MODIFICATA: La logica di creazione della tabella ora divide i giorni in due colonne.
-     */
     const createReportImage = async (share = false) => {
         const name = prompt("Inserisci il tuo nome per personalizzare il report:");
         if (!name) return;
@@ -200,12 +210,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 </p>
             </div>`;
 
-        // ==================================================================
-        // MODIFICA PRINCIPALE: Suddivisione della tabella in due colonne
-        // ==================================================================
-
         const createTableHTML = (data) => {
-            if (data.length === 0) return '<div></div>'; // Restituisce un div vuoto se non ci sono dati
+            if (data.length === 0) return '<div></div>';
             const rows = data.map(entry => {
                 const hoursM = parseFloat(entry.hoursM || 0);
                 const hoursA = parseFloat(entry.hoursA || 0);
@@ -237,11 +243,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 </table>`;
         };
 
-        // Suddividi i dati per le due colonne
         const firstHalfEntries = filteredEntries.filter(e => new Date(e.date).getDate() <= 15);
         const secondHalfEntries = filteredEntries.filter(e => new Date(e.date).getDate() > 15);
 
-        // Crea il contenitore flessibile per le due tabelle
         const tablesHTML = `
             <div style="display: flex; gap: 20px; align-items: flex-start;">
                 <div style="flex: 1;">
@@ -254,9 +258,6 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         
         printContainer.innerHTML = summaryHTML + tablesHTML;
-        // ==================================================================
-        // FINE MODIFICA
-        // ==================================================================
         
         document.body.appendChild(printContainer);
     
@@ -360,35 +361,54 @@ document.addEventListener('DOMContentLoaded', () => {
         applyTheme(state.theme);
     }
     
+    // ==================================================================
+    // MODIFICA PRINCIPALE: Nuova logica di validazione
+    // ==================================================================
     function handleAddEntry() {
-        const date = DOMElements.dateInput.value;
-        if (!date) {
+        const dateStr = DOMElements.dateInput.value;
+        if (!dateStr) {
             alert('Per favore, inserisci una data.');
             return;
         }
-        if (state.logEntries.some(entry => entry.date === date)) {
+        if (state.logEntries.some(entry => entry.date === dateStr)) {
             alert('Errore: Questa data è già presente nel registro.');
             return;
         }
         
         const hoursM = parseFloat(DOMElements.hoursMorningInput.value);
         const hoursA = parseFloat(DOMElements.hoursAfternoonInput.value);
+        const locationM = DOMElements.morningSelect.value;
+        const locationA = DOMElements.afternoonSelect.value;
 
-        if (hoursM === 0 && hoursA === 0) {
-            alert('Inserire almeno un valore di ore lavorate.');
-            return;
+        // Controlla il giorno della settimana (0 = Domenica, 6 = Sabato)
+        const entryDate = new Date(dateStr + 'T00:00:00');
+        const dayOfWeek = entryDate.getDay();
+        const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+
+        // Applica la regola solo se NON è un weekend
+        if (!isWeekend) {
+            if (hoursM > 0 && !locationM) {
+                alert('Per favore, seleziona un cantiere per le ore del mattino.');
+                return;
+            }
+            if (hoursA > 0 && !locationA) {
+                alert('Per favore, seleziona un cantiere per le ore del pomeriggio.');
+                return;
+            }
         }
 
+        // Aggiungi la voce (ora accetta anche 0 ore)
         state.logEntries.push({
             id: Date.now(),
-            date: date,
+            date: dateStr,
             hoursM: hoursM.toFixed(1),
             hoursA: hoursA.toFixed(1),
-            locationM: DOMElements.morningSelect.value,
-            locationA: DOMElements.afternoonSelect.value
+            locationM: locationM,
+            locationA: locationA
         });
         saveState(STORAGE_KEYS.LOG, state.logEntries);
         
+        // Reset del form
         DOMElements.morningSelect.value = '';
         DOMElements.afternoonSelect.value = '';
         [DOMElements.hourSelectorMorning, DOMElements.hourSelectorAfternoon].forEach(sel => sel.querySelector('.active')?.classList.remove('active'));

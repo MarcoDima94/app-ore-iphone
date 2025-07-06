@@ -1,0 +1,16 @@
+{
+  "name": "Edil Di Maggio - Registro Ore",
+  "short_name": "Registro Ore",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#5F7470",
+  "theme_color": "#5F7470",
+  "description": "App per la gestione del registro ore lavorative.",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
