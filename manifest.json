@@ -1,14 +1,19 @@
 {
-  "name": "Edil Di Maggio - Registro Ore",
-  "short_name": "Registro Ore",
-  "start_url": ".",
+  "name": "Edil Di Maggio Ore",
+  "short_name": "Edil Ore",
+  "description": "App per la registrazione delle ore di lavoro per Edil Di Maggio.",
+  "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#5F7470",
-  "theme_color": "#5F7470",
-  "description": "App per la gestione del registro ore lavorative.",
+  "theme_color": "#546A7B",
   "icons": [
     {
-      "src": "icon.png",
+      "src": "images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "images/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }

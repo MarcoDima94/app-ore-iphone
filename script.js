@@ -1,16 +1,3 @@
-
-// --- REGISTRAZIONE DEL SERVICE WORKER ---
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then(registration => {
-        console.log('Service Worker registrato con successo:', registration);
-      })
-      .catch(error => {
-        console.log('Registrazione del Service Worker fallita:', error);
-      });
-  });
-}
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- COSTANTI E STATO DELL'APPLICAZIONE ---
@@ -92,7 +79,9 @@ document.addEventListener('DOMContentLoaded', () => {
         DOMElements.themeToggle.checked = theme === 'dark';
     };
 
+    // FUNZIONE CORRETTA
     const createHourButtons = (container) => {
+        container.innerHTML = ''; // Svuota i bottoni esistenti per evitare duplicati
         for (let i = 0; i <= 10; i++) {
             const button = document.createElement('button');
             button.type = 'button';
@@ -361,9 +350,6 @@ document.addEventListener('DOMContentLoaded', () => {
         applyTheme(state.theme);
     }
     
-    // ==================================================================
-    // MODIFICA PRINCIPALE: Nuova logica di validazione
-    // ==================================================================
     function handleAddEntry() {
         const dateStr = DOMElements.dateInput.value;
         if (!dateStr) {
@@ -380,12 +366,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const locationM = DOMElements.morningSelect.value;
         const locationA = DOMElements.afternoonSelect.value;
 
-        // Controlla il giorno della settimana (0 = Domenica, 6 = Sabato)
         const entryDate = new Date(dateStr + 'T00:00:00');
         const dayOfWeek = entryDate.getDay();
         const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
 
-        // Applica la regola solo se NON è un weekend
         if (!isWeekend) {
             if (hoursM > 0 && !locationM) {
                 alert('Per favore, seleziona un cantiere per le ore del mattino.');
@@ -397,7 +381,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Aggiungi la voce (ora accetta anche 0 ore)
         state.logEntries.push({
             id: Date.now(),
             date: dateStr,
@@ -408,7 +391,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         saveState(STORAGE_KEYS.LOG, state.logEntries);
         
-        // Reset del form
         DOMElements.morningSelect.value = '';
         DOMElements.afternoonSelect.value = '';
         [DOMElements.hourSelectorMorning, DOMElements.hourSelectorAfternoon].forEach(sel => sel.querySelector('.active')?.classList.remove('active'));
@@ -454,4 +436,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     init();
+
+    // --- REGISTRAZIONE DEL SERVICE WORKER ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(registration => {
+                    console.log('Service Worker registrato con successo:', registration);
+                })
+                .catch(error => {
+                    console.log('Registrazione del Service Worker fallita:', error);
+                });
+        });
+    }
+
 });
